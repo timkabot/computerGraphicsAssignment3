@@ -12,29 +12,26 @@ int Win32Window::Run(Renderer* pRenderer, HINSTANCE hInstance, int nCmdShow)
 	window_class.hInstance = hInstance;
 	window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
 	window_class.lpszClassName = L"DXSampleClass";
+
 	RegisterClassEx(&window_class);
 
 	// Create the window and store a handle to it.
-	RECT window_rect = { 0, 0, static_cast<LONG>(pRenderer->GetWidth()),
-	static_cast<LONG>(pRenderer->GetHeight()) };
+	RECT window_rect = { 0, 0, static_cast<LONG>(pRenderer->GetWidth()), static_cast<LONG>(pRenderer->GetHeight()) };
 	AdjustWindowRect(&window_rect, WS_OVERLAPPEDWINDOW, FALSE);
-	hwnd = CreateWindow(
-		window_class.lpszClassName,
-		pRenderer->GetTitle(),
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT,
-		CW_USEDEFAULT,
+
+	hwnd = CreateWindow(window_class.lpszClassName, L"DXSample", WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT,
 		window_rect.right - window_rect.left,
 		window_rect.bottom - window_rect.top,
-		nullptr,
-		nullptr,
+		NULL,
+		NULL,
 		hInstance,
-		pRenderer
-	);
+		pRenderer);
 
 	// Initialize the sample. OnInit is defined in each child-implementation of DXSample.
 	pRenderer->OnInit();
 	ShowWindow(hwnd, nCmdShow);
+
 	// Main sample loop.
 	MSG msg = {};
 	while (msg.message != WM_QUIT)
@@ -47,7 +44,7 @@ int Win32Window::Run(Renderer* pRenderer, HINSTANCE hInstance, int nCmdShow)
 	}
 
 	pRenderer->OnDestroy();
-	// Return this part of the WM_QUIT message to Windows.
+
 	return static_cast<int>(msg.wParam);
 }
 

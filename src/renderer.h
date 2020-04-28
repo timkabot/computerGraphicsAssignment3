@@ -4,27 +4,45 @@
 
 #include "win32_window.h"
 
+// Movement speed
+#define SPEED 0.001f
+// Directional constants
+#define UP_VECTOR XMVECTOR{ 0.0f, 1.0f, 0.0f }
+// Virtual key codes for controls
+// NOTE: Capital letters are virtual codes: https://nehe.gamedev.net/article/msdn_virtualkey_codes/15009/
+#define FORWARDS 'W'
+#define BACKWARDS 'S'
+#define LEFT 'A'
+#define RIGHT 'D'
+#define UP VK_OEM_PLUS
+#define DOWN VK_OEM_MINUS
+#define ROTATE_RIGHT 'E'
+#define ROTATE_LEFT 'Q'
+
 class Renderer
 {
 public:
-	Renderer(UINT width, UINT height) : width(width), height(height), title(L"DX12 renderer"), frame_index(0), rtv_descriptor_size(0)
+	Renderer(UINT width, UINT height) : 
+		// Internal variables
+		width(width), height(height), 
+		title(L"DX12 renderer"), frame_index(0), rtv_descriptor_size(0),
+		aspect_ratio(static_cast<float>(width) / static_cast<float>(height)),
+		// Drawing variables
+		view_port(CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height))),
+		scissor_rect(CD3DX12_RECT(0, 0, static_cast<LONG>(width), static_cast<LONG>(height))),
+		vertex_buffer_view({}),
+		fence_value(0), fence_event(NULL),
+		// Projection matrices
+		mwp(XMMatrixIdentity()),
+		world(XMMatrixTranslation(0.f, 0.f, 0.f) * XMMatrixScaling(0.5f, 0.5f, 0.5f)),
+		view(XMMatrixIdentity()),
+		projection(XMMatrixPerspectiveFovLH(XMConvertToRadians(60.f), aspect_ratio, 0.001f, 100.f)),
+		// Eye variables. Put the eye in front of the box
+		eye_position({ 0.0f, 0.5f, -5.0f })
 	{
-		view_port = CD3DX12_VIEWPORT(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height));
-		scissor_rect = CD3DX12_RECT(0, 0, static_cast<LONG>(width), static_cast<LONG>(height));
-		vertex_buffer_view = {};
-		fence_value = 0;
-		fence_event = nullptr;
-		aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
-		verteces.clear();
-
-		world_view_projection = XMMatrixIdentity();
-		world = XMMatrixTranslation(0, 0, 0) * XMMatrixScaling(1.0, 1.0, 1.0);
-		view = XMMatrixIdentity();
-		eye_position = XMVECTOR({ 0.0f, 1.0f, -5.0f });
-		//projection = XMMatrixIdentity();
-		projection = XMMatrixPerspectiveFovLH(60.f*XM_PI/180.f, aspect_ratio, 0.001f, 100.f);
-		//projection = XMMatrixOrthographicLH(width, height, 0.1f, 10.f);
+		vertices.clear();
 	};
+
 	virtual ~Renderer() {};
 
 	virtual void OnInit();
@@ -63,13 +81,21 @@ protected:
 	CD3DX12_RECT scissor_rect;
 
 	// Resources
-	std::vector<ColorVertex> verteces;
+	std::vector <ColorVertex> vertices;
 	ComPtr<ID3D12Resource> vertex_buffer;
 	D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view;
 
-	XMMATRIX world_view_projection;
+	// Projection matrices and storage for them
+	float aspect_ratio;
+	XMMATRIX world;
+	XMMATRIX view;
+	XMMATRIX projection;
+
+	XMVECTOR eye_position;
+
+	XMMATRIX mwp;
 	ComPtr<ID3D12Resource> constant_buffer;
-	UINT8* constant_buffer_data_begin;
+	UINT8* constant_data_begin;
 
 	// Synchronization objects.
 	UINT frame_index;
@@ -77,21 +103,17 @@ protected:
 	ComPtr<ID3D12Fence> fence;
 	UINT64 fence_value;
 
-	float aspect_ratio;
+	// Movement deltas
+	float delta_forward = 0.0f;
+	float delta_right = 0.0f;
+	float delta_up = 0.0f;
+	float delta_angle = 0.0f;
+	float angle = 0.0f;
 
+	// Internal functions
 	void LoadPipeline();
 	void LoadAssets();
 	void PopulateCommandList();
 	void WaitForPreviousFrame();
 	std::wstring GetBinPath(std::wstring shader_file) const;
-
-	XMMATRIX world;
-	XMMATRIX view;
-	XMMATRIX projection;
-
-	XMVECTOR eye_position;
-	float angle = 0.f;
-
-	float delta_forward = 0.f;
-	float delta_rotation = 0.f;
 };

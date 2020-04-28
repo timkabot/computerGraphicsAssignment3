@@ -1,9 +1,0 @@
-.vs/
-.vscode/
-bin/
-obj/
-results/
-
-*.sln
-*.vcxproj
-*.vcxproj.user

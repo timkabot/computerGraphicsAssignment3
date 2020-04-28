@@ -1,6 +1,8 @@
+#pragma pack_matrix(row_major)
+
 cbuffer ConstantBuffer: register(b0)
 {
-	float4x4 mwpMatrix;
+    float4x4 mwpMatrix;
 }
 
 struct PSInput
@@ -13,8 +15,7 @@ PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
 {
 	PSInput result;
 
-
-	result.position = mul(mwpMatrix, position);
+	result.position = mul(position, mwpMatrix);
 	result.color = color;
 
 	return result;
